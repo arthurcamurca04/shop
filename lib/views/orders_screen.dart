@@ -5,22 +5,43 @@ import 'package:shop/widgets/app_drawer.dart';
 import 'package:shop/widgets/order.widget.dart';
 
 class OrdersScreen extends StatelessWidget {
+  Future<void> _refreshOrders(BuildContext context) {
+    return Provider.of<Orders>(context, listen: false).loadOrders();
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    final orders = Provider.of<Orders>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Meus Pedidos'),
       ),
       drawer: AppDrawer(),
-      body: ListView.builder(
-        itemCount: orders.itemsCount,
-        itemBuilder: (_, i){
-          return OrderWidget(order: orders.orders[i],);
-        }
-
+      body: RefreshIndicator(
+        onRefresh: () => _refreshOrders(context),
+        child: FutureBuilder(
+          future: Provider.of<Orders>(context, listen: false).loadOrders(),
+          builder: (_, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else {
+              return Consumer<Orders>(
+                builder: (_, orders, __) {
+                  return ListView.builder(
+                    itemCount: orders.itemsCount,
+                    itemBuilder: (_, i) {
+                      return OrderWidget(
+                        order: orders.orders[i],
+                      );
+                    },
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shop/utils/firebase_urls.dart';
 
 class Product with ChangeNotifier {
   final String id;
@@ -26,8 +27,7 @@ class Product with ChangeNotifier {
 
   Future<void> toggleFavorite() async {
     _toggleFavorite();
-    final String _baseUrl =
-        'https://nn-gamez-18bff.firebaseio.com/products/$id.json';
+    final String _baseUrl ='${FirebaseURLs.BASE_API_URL}/products/$id.json';
 
     try {
        final response = await http.patch('$_baseUrl',

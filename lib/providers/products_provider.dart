@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shop/providers/product.dart';
+import 'package:shop/utils/firebase_urls.dart';
 
 class Products with ChangeNotifier {
-  final String _baseUrl = 'https://nn-gamez-18bff.firebaseio.com/products';
+  final String _baseUrl = '${FirebaseURLs.BASE_API_URL}/products';
   List<Product> _items = [];
 
   List<Product> get items {
