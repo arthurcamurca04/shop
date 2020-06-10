@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:shop/utils/firebase_urls.dart';
-
 import 'cart.dart';
+
+import '../utils/firebase_urls.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -18,15 +18,20 @@ class Order {
 class Orders with ChangeNotifier {
   final String _baseUrl = '${FirebaseURLs.BASE_API_URL}/orders';
 
+  String _token;
+  String _userId;
+
   List<Order> _orders = [];
 
-  List<Order> get orders => _orders;
+  Orders([this._token, this._userId, this._orders = const[]]);
+
+  List<Order> get orders => [..._orders];
 
   int get itemsCount => _orders.length;
 
   Future<void> loadOrders() async {
     List<Order> loadedOrders = [];
-    final response = await http.get("$_baseUrl.json");
+    final response = await http.get("$_baseUrl/$_userId.json?auth=$_token");
     Map<String, dynamic> data = json.decode(response.body);
 
     print(data);
@@ -61,7 +66,7 @@ class Orders with ChangeNotifier {
     final date = DateTime.now();
 
     try {
-      final response = await http.post('$_baseUrl.json',
+      final response = await http.post('$_baseUrl/$_userId.json?auth=$_token',
           body: json.encode({
             'products': cart.items.values
                 .map((ci) => {

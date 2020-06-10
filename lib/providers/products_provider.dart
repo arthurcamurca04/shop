@@ -2,15 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shop/providers/product.dart';
-import 'package:shop/utils/firebase_urls.dart';
+import '../providers/product.dart';
+import '../utils/firebase_urls.dart';
 
 class Products with ChangeNotifier {
   final String _baseUrl = '${FirebaseURLs.BASE_API_URL}/products';
   List<Product> _items = [];
+  String _token;
+  String _userId;
+
+  Products([this._token, this._userId, this._items = const []]);
 
   List<Product> get items {
-    return _items;
+    return [..._items];
   }
 
   int get itemCount => _items.length;
@@ -20,18 +24,24 @@ class Products with ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
-    final response = await http.get("$_baseUrl.json");
+    final response = await http.get("$_baseUrl.json?auth=$_token");
     Map<String, dynamic> data = json.decode(response.body);
+    final favResponse = await http.get(
+        "${FirebaseURLs.BASE_API_URL}/userFavorites/$_userId.json?auth=$_token");
+    final favMap = json.decode(favResponse.body);
+
     _items.clear();
     if (data != null) {
       data.forEach((productId, productData) {
+        final isFavorited = favMap == null ? false : favMap[productId] ?? false;
         _items.add(Product(
-            id: productId,
-            title: productData['title'],
-            description: productData['description'],
-            price: productData['price'],
-            imageUrl: productData['imageUrl'],
-            isFavorited: productData['isFavorited']));
+          id: productId,
+          title: productData['title'],
+          description: productData['description'],
+          price: productData['price'],
+          imageUrl: productData['imageUrl'],
+          isFavorited: isFavorited,
+        ));
       });
       notifyListeners();
     }
@@ -41,13 +51,12 @@ class Products with ChangeNotifier {
 
   Future<void> addProduct(Product newProduct) async {
     await http
-        .post("$_baseUrl.json",
+        .post("$_baseUrl.json?auth=$_token",
             body: json.encode({
               'title': newProduct.title,
               'description': newProduct.description,
               'price': newProduct.price,
               'imageUrl': newProduct.imageUrl,
-              'isFavorited': newProduct.isFavorited,
             }))
         .then((response) {
       var id = json.decode(response.body)['name'];
@@ -74,7 +83,7 @@ class Products with ChangeNotifier {
     if (index >= 0) {
       try {
         await http.patch(
-          '$_baseUrl/${product.id}.json',
+          '$_baseUrl/${product.id}.json?auth=$_token',
           body: json.encode({
             "title": product.title,
             "description": product.description,
@@ -98,15 +107,13 @@ class Products with ChangeNotifier {
       _items.remove(product);
       notifyListeners();
 
-      final response = await http.delete('$_baseUrl/${product.id}.json');
+      final response =
+          await http.delete('$_baseUrl/${product.id}.json?auth=$_token');
 
-      if(response.statusCode >= 400){
+      if (response.statusCode >= 400) {
         _items.insert(index, product);
-         notifyListeners();
+        notifyListeners();
       }
-
-  
     }
   }
 }
- 
