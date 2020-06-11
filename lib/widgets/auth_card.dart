@@ -89,7 +89,7 @@ class _AuthCardState extends State<AuthCard> {
     return Container(
       padding: const EdgeInsets.all(8.0),
       width: deviceSize.width * 0.9,
-      height: deviceSize.height * 0.38,
+      height: deviceSize.height * 0.36,
       child: Form(
         key: _formState,
         child: ListView(
